@@ -28,9 +28,9 @@ class MyPainter extends CustomPainter {
 }
 
 void mainCircle(Canvas canvas, Size size, double end) {
-  const double strokeWidth = 50;
+  const double strokeWidth = 25;
   final Paint paint = Paint()
-    ..color = Colors.lightBlueAccent
+    ..color = Colors.pink
   // ..shader = const SweepGradient(
   //     startAngle: 1,
   //     endAngle: pi * 2,
@@ -57,9 +57,9 @@ void mainCircle(Canvas canvas, Size size, double end) {
 }
 
 void mainBack(Canvas canvas, Size size) {
-  const double strokeWidth = 50;
+  const double strokeWidth = 25;
   final Paint paint = Paint()
-    ..color = Colors.teal.withOpacity(0.1)
+    ..color = Colors.deepPurple .withOpacity(0.3)
     ..style = PaintingStyle.stroke
     ..strokeWidth = strokeWidth;
 
@@ -78,7 +78,8 @@ void drawText(Canvas canvas, Size size, int minutes, int seconds) {
 
   TextSpan text = TextSpan(
       text: '$strMin:$strSec',
-      style: const TextStyle(color: Colors.black, fontSize: 50));
+      style: const TextStyle(color: Colors.black, fontSize: 90,fontWeight: FontWeight.bold,fontStyle: FontStyle.italic,
+      ));
   TextPainter textPainter = TextPainter(
       text: text,
       textAlign: TextAlign.center,

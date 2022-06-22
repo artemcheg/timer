@@ -72,7 +72,7 @@ flutter:
   # https://flutter.dev/assets-and-images/#from-packages
 
   assets:
-    - assets/audio/
+    - assets/
 
   fonts:
     - family: Ora

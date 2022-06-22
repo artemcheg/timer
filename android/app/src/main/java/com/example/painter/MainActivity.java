@@ -1,25 +1,22 @@
 package com.example.painter;
 
-import android.media.AudioAttributes;
-import android.media.AudioManager;
 import android.media.MediaPlayer;
-import android.media.SoundPool;
-import android.os.Build;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
-import androidx.core.app.NotificationCompat;
 
 import io.flutter.embedding.android.FlutterActivity;
 import io.flutter.embedding.engine.FlutterEngine;
+import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
 
 public class MainActivity extends FlutterActivity {
-    private MediaPlayer mMediaPlayer;
-    private SoundPool mSoundPool;
-    int mSoundId;
-    String CHANNEL = "timer";
-    String CHANNEL_POOL = "timerPool";
-    int streamId = 0;
+    private MediaPlayer mMediaPlayerTick;
+    private MediaPlayer mMediaPlayerAlarm;
+    private MediaPlayer mMediaPlayerRegular;
+    String CHANNEL = "timerTick";
+    String CHANNEL2 = "timerAlarm";
+    String CHANNEL3 = "timerRegular";
 
 
     @Override
@@ -29,92 +26,123 @@ public class MainActivity extends FlutterActivity {
         new MethodChannel(flutterEngine.getDartExecutor().getBinaryMessenger(), CHANNEL)
                 .setMethodCallHandler((call, result) -> {
                     switch (call.method) {
-                        case "play":
-                            play();
+                        case "playTick":
+                            playTick();
                             break;
 
-                        case "dispose":
-                            dispose();
+                        case "disposeTick":
+                            disposeTick();
                             break;
                     }
                 });
 
+        new MethodChannel(flutterEngine.getDartExecutor().getBinaryMessenger(), CHANNEL2)
+                .setMethodCallHandler((call, result) -> {
+                    switch (call.method) {
 
-        new MethodChannel(flutterEngine.getDartExecutor(), CHANNEL_POOL).setMethodCallHandler((call, result) -> {
-            switch (call.method) {
-                case "play":
-                    poolPlay();
-                    break;
-                case "pause":
-                    poolPause();
-                    break;
-                case "resume":
-                    poolResume();
-                    break;
-                case "stop":
-                    poolStop();
-                    break;
-                case "dispose":
-                    poolDispose();
-                    break;
+                        case "playAlarm":
+                            String s = call.argument("name");
+                            playAlarm(result, s);
+                            break;
+                        case "disposeAlarm":
+                            try {
+                                disposeAlarm();
+                                result.success(true);
+                            } catch (Exception e) {
+                                result.error("не выполнено", "xz", "xz");
+                            }
+
+                            break;
+                    }
+                });
+
+        new MethodChannel(flutterEngine.getDartExecutor().getBinaryMessenger(), CHANNEL3)
+                .setMethodCallHandler((call, result) -> {
+                    switch (call.method) {
+
+                        case "playRegular":
+                            playRegular();
+                            break;
+                        case "disposeRegular":
+                            try {
+                                disposeRegular();
+                                result.success(true);
+                            } catch (Exception e) {
+                                result.error("не выполнено", "xz", "xz");
+                            }
+
+                            break;
+                    }
+                });
+
+    }
+
+
+    void playRegular() {
+        if (mMediaPlayerRegular == null) {
+            mMediaPlayerRegular = MediaPlayer.create(this, R.raw.regular);
+            mMediaPlayerRegular.start();
+
+
+        } else if (!mMediaPlayerRegular.isPlaying() && mMediaPlayerRegular != null) {
+            mMediaPlayerRegular.start();
+        }
+    }
+
+    void disposeRegular() {
+        if (mMediaPlayerRegular != null) {
+            mMediaPlayerRegular.reset();
+            mMediaPlayerRegular.release();
+            mMediaPlayerRegular = null;
+        }
+    }
+
+    void playTick() {
+        if (mMediaPlayerTick == null) {
+            mMediaPlayerTick = MediaPlayer.create(this, R.raw.tick);
+            mMediaPlayerTick.start();
+        } else if (!mMediaPlayerTick.isPlaying() && mMediaPlayerTick != null) {
+            mMediaPlayerTick.start();
+        }
+    }
+
+    void disposeTick() {
+        if (mMediaPlayerTick != null) {
+            mMediaPlayerTick.reset();
+            mMediaPlayerTick.release();
+            mMediaPlayerTick = null;
+        }
+    }
+
+    void playAlarm(MethodChannel.Result result, String name) {
+        if (mMediaPlayerAlarm == null) {
+            if (name.equals("alarm")) {
+                mMediaPlayerAlarm = MediaPlayer.create(this, R.raw.alarm);
+            } else {
+                mMediaPlayerAlarm = MediaPlayer.create(this, R.raw.clap);
             }
-        });
-
-    }
+            mMediaPlayerAlarm.start();
 
 
-    void poolPlay() {
-        if (Build.VERSION.SDK_INT <= 21) {
-            mSoundPool = new SoundPool(1, AudioManager.STREAM_ALARM, 0);
-        } else {
-            mSoundPool = new SoundPool.Builder().setMaxStreams(1).
-                    setAudioAttributes(new AudioAttributes.Builder().
-                            setContentType(AudioAttributes.CONTENT_TYPE_MUSIC).build()).build();
+            mMediaPlayerAlarm.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                @Override
+                public void onCompletion(MediaPlayer mp) {
+                    result.success("завершено");
+                    disposeAlarm();
+                }
+            });
+
+        } else if (!mMediaPlayerAlarm.isPlaying() && mMediaPlayerAlarm != null) {
+            mMediaPlayerAlarm.start();
         }
-        mSoundId = mSoundPool.load(this, R.raw.tick, 1);
-        streamId = mSoundPool.play(mSoundId, 1, 1, 1, 0, 1);
+
     }
 
-    void poolStop() {
-        if (mSoundPool != null) {
-            mSoundPool.stop(streamId);
-        }
-    }
-
-    void poolPause() {
-        if (mSoundPool != null) {
-            mSoundPool.pause(streamId);
-        }
-    }
-
-    void poolResume() {
-        if (mSoundPool != null) {
-            mSoundPool.resume(streamId);
-        }
-    }
-
-    void poolDispose() {
-        if (mSoundPool != null) {
-            mSoundPool.release();
-            mSoundPool = null;
-        }
-    }
-
-
-    void play() {
-        if (mMediaPlayer == null) {
-            mMediaPlayer = MediaPlayer.create(this, R.raw.tick);
-            mMediaPlayer.start();
-        } else if (!mMediaPlayer.isPlaying() && mMediaPlayer != null) {
-            mMediaPlayer.start();
-        }
-    }
-
-
-    void dispose() {
-        if (mMediaPlayer != null) {
-            mMediaPlayer.release();
-            mMediaPlayer = null;
+    void disposeAlarm() {
+        if (mMediaPlayerAlarm != null) {
+            mMediaPlayerAlarm.reset();
+            mMediaPlayerAlarm.release();
+            mMediaPlayerAlarm = null;
         }
     }
 }
